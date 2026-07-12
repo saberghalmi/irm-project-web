@@ -1,0 +1,776 @@
+{% extends 'viewer/base.html' %}
+
+{% block title %}Recherche d'images{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <!-- Header Section -->
+    <div class="search-header">
+        <div class="search-icon-wrapper">
+            <i class="fas fa-search"></i>
+        </div>
+        <h1 class="search-title">Recherche avancée</h1>
+        <p class="search-subtitle">Trouvez rapidement vos images IRM dans la base de données</p>
+    </div>
+
+    <!-- Search Form -->
+    <div class="search-form-wrapper">
+        <form method="get" class="elegant-search-form" id="searchForm">
+            <div class="form-grid">
+                {{ form.as_p }}
+            </div>
+            <div class="search-actions">
+                <button type="submit" class="search-btn primary">
+                    <i class="fas fa-search"></i>
+                    <span>Lancer la recherche</span>
+                </button>
+                <button type="reset" class="search-btn secondary">
+                    <i class="fas fa-redo-alt"></i>
+                    <span>Réinitialiser</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section">
+        <div class="results-header">
+            <div class="results-title-wrapper">
+                <h2 class="results-title">
+                    <i class="fas fa-clipboard-list"></i>
+                    Résultats de recherche
+                </h2>
+                {% if images %}
+                    <span class="results-count">{{ images|length }} image{{ images|length|pluralize }} trouvée{{ images|length|pluralize }}</span>
+                {% endif %}
+            </div>
+            
+            {% if images %}
+                <div class="view-toggle">
+                    <button class="toggle-btn active" data-view="grid" title="Vue grille">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="toggle-btn" data-view="list" title="Vue liste">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="results-content">
+            {% if images %}
+                <div class="images-grid" id="imagesContainer">
+                    {% for image in images %}
+                        <div class="image-card">
+                            <div class="image-preview">
+                                {% if image.png_preview %}
+                                    <img src="{{ image.png_preview.url }}" alt="{{ image.title }}" loading="lazy">
+                                    <div class="preview-overlay">
+                                        <button class="preview-btn" onclick="openImageModal('{{ image.png_preview.url }}', '{{ image.title }}')">
+                                            <i class="fas fa-expand-alt"></i>
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <div class="no-preview">
+                                        <i class="fas fa-image"></i>
+                                        <span>Pas d'aperçu</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="image-info">
+                                <h3 class="image-title">{{ image.title }}</h3>
+                                
+                                <div class="image-details">
+                                    <div class="detail-item">
+                                        <i class="fas fa-user"></i>
+                                        <span class="detail-label">Patient:</span>
+                                        <span class="detail-value">{{ image.patient_name }}</span>
+                                    </div>
+                                    
+                                    <div class="detail-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <span class="detail-label">Date:</span>
+                                        <span class="detail-value">{{ image.exam_date|date:"d/m/Y" }}</span>
+                                    </div>
+                                    
+                                    <div class="detail-item">
+                                        <i class="fas fa-stethoscope"></i>
+                                        <span class="detail-label">Type AVC:</span>
+                                        <span class="detail-value avc-type">{{ image.avc_type }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="image-actions">
+                                    <button class="action-btn primary">
+                                        <i class="fas fa-eye"></i>
+                                        Analyser
+                                    </button>
+                                    <button class="action-btn secondary">
+                                        <i class="fas fa-download"></i>
+                                        Télécharger
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-search-minus"></i>
+                    </div>
+                    <h3 class="empty-title">Aucun résultat trouvé</h3>
+                    <p class="empty-message">Essayez de modifier vos critères de recherche ou vérifiez l'orthographe</p>
+                    <button class="empty-action" onclick="document.getElementById('searchForm').reset();">
+                        <i class="fas fa-redo-alt"></i>
+                        Nouvelle recherche
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour aperçu d'image -->
+<div class="image-modal" id="imageModal">
+    <div class="modal-backdrop" onclick="closeImageModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle"></h3>
+            <button class="modal-close" onclick="closeImageModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <img id="modalImage" src="" alt="">
+        </div>
+    </div>
+</div>
+
+<style>
+:root {
+    --primary-color: #4f46e5;
+    --secondary-color: #06b6d4;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.search-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.search-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--gray-100);
+}
+
+.search-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.search-icon-wrapper i {
+    font-size: 2rem;
+    color: white;
+}
+
+.search-title {
+    font-size: 2.5rem;
+    color: var(--gray-800);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.025em;
+}
+
+.search-subtitle {
+    font-size: 1.1rem;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+.search-form-wrapper {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-200);
+    margin-bottom: 3rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.elegant-search-form p {
+    margin: 0;
+}
+
+.elegant-search-form label {
+    display: block;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.elegant-search-form input,
+.elegant-search-form select {
+    width: 100%;
+    padding: 0.875rem;
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background: white;
+}
+
+.elegant-search-form input:focus,
+.elegant-search-form select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgb(79 70 229 / 0.1);
+}
+
+.search-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.search-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.search-btn.primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.search-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.search-btn.secondary {
+    background: var(--gray-100);
+    color: var(--gray-700);
+    border: 2px solid var(--gray-200);
+}
+
+.search-btn.secondary:hover {
+    background: var(--gray-200);
+}
+
+.results-section {
+    margin-top: 3rem;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.results-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.results-title {
+    font-size: 1.8rem;
+    color: var(--gray-800);
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.results-count {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.view-toggle {
+    display: flex;
+    background: var(--gray-100);
+    border-radius: 8px;
+    padding: 0.25rem;
+}
+
+.toggle-btn {
+    padding: 0.5rem;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--gray-600);
+}
+
+.toggle-btn.active,
+.toggle-btn:hover {
+    background: white;
+    color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.images-grid.list-view {
+    grid-template-columns: 1fr;
+}
+
+.image-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-200);
+    transition: all 0.3s;
+}
+
+.image-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.image-preview {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    background: var(--gray-50);
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.image-card:hover .image-preview img {
+    transform: scale(1.05);
+}
+
+.preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.image-card:hover .preview-overlay {
+    opacity: 1;
+}
+
+.preview-btn {
+    background: white;
+    color: var(--gray-800);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.preview-btn:hover {
+    transform: scale(1.1);
+}
+
+.no-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--gray-400);
+}
+
+.no-preview i {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.image-info {
+    padding: 1.5rem;
+}
+
+.image-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+}
+
+.image-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.detail-item i {
+    color: var(--primary-color);
+    width: 16px;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--gray-600);
+    min-width: 60px;
+}
+
+.detail-value {
+    color: var(--gray-800);
+}
+
+.avc-type {
+    background: var(--warning-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.image-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn.primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background: #3730a3;
+}
+
+.action-btn.secondary {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.action-btn.secondary:hover {
+    background: var(--gray-200);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+}
+
+.empty-icon {
+    width: 100px;
+    height: 100px;
+    background: var(--gray-100);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.empty-icon i {
+    font-size: 3rem;
+    color: var(--gray-400);
+}
+
+.empty-title {
+    font-size: 1.5rem;
+    color: var(--gray-800);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.empty-message {
+    color: var(--gray-600);
+    margin-bottom: 2rem;
+}
+
+.empty-action {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.875rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.empty-action:hover {
+    background: #3730a3;
+    transform: translateY(-2px);
+}
+
+/* Modal */
+.image-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    cursor: pointer;
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.modal-body img {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .search-container {
+        padding: 1rem;
+    }
+    
+    .search-title {
+        font-size: 2rem;
+    }
+    
+    .search-form-wrapper {
+        padding: 1.5rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .search-actions {
+        flex-direction: column;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .results-title-wrapper {
+        justify-content: center;
+    }
+    
+    .images-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .image-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // View toggle functionality
+    const toggleBtns = document.querySelectorAll('.toggle-btn');
+    const imagesContainer = document.getElementById('imagesContainer');
+    
+    toggleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            toggleBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const view = this.getAttribute('data-view');
+            if (view === 'list') {
+                imagesContainer.classList.add('list-view');
+            } else {
+                imagesContainer.classList.remove('list-view');
+            }
+        });
+    });
+    
+    // Reset button functionality
+    const resetBtn = document.querySelector('.search-btn.secondary');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('searchForm').reset();
+        });
+    }
+});
+
+function openImageModal(imageUrl, imageTitle) {
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('modalTitle');
+    
+    modalImage.src = imageUrl;
+    modalImage.alt = imageTitle;
+    modalTitle.textContent = imageTitle;
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImageModal();
+    }
+});
+</script>
+
+{% endblock %}

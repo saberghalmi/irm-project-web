@@ -1,0 +1,39 @@
+{% extends 'viewer/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Détails du patient</h2>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ patient.name }}</h5>
+            <p><strong>Âge :</strong> {{ patient.age }}</p>
+            <p><strong>Sexe :</strong> {{ patient.gender }}</p>
+            <p><strong>Adresse :</strong> {{ patient.address }}</p>
+            <p><strong>Numéro de dossier :</strong> {{ patient.record_number }}</p>
+        </div>
+    </div>
+
+    <hr>
+
+    <h3>Images IRM</h3>
+    {% if irm_images %}
+        <div class="row">
+            {% for image in irm_images %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <img src="{{ image.image.url }}" class="card-img-top" alt="IRM">
+                        <div class="card-body">
+                            <p class="card-text"><strong>Date :</strong> {{ image.exam_date }}</p>
+                            <p class="card-text"><strong>Type d'AVC :</strong> {{ image.avc_type }}</p>
+                            <a href="{% url 'view_image' image.id %}" class="btn btn-primary btn-sm">Voir l'image</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Aucune image IRM disponible pour ce patient.</p>
+    {% endif %}
+</div>
+{% endblock %}

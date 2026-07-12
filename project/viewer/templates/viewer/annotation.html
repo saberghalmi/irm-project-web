@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+<canvas id="annotationCanvas" width="600" height="600" style="border:1px solid #ccc;"></canvas>
+
+<button id="saveBtn">Enregistrer annotations</button>
+
+<script>
+const canvas = document.getElementById('annotationCanvas');
+const ctx = canvas.getContext('2d');
+
+let startX, startY;
+let isDrawing = false;
+let rectangles = [];
+
+canvas.addEventListener('mousedown', e => {
+  startX = e.offsetX;
+  startY = e.offsetY;
+  isDrawing = true;
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (!isDrawing) return;
+  const currentX = e.offsetX;
+  const currentY = e.offsetY;
+
+  // Redessine tout
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  rectangles.forEach(r => {
+    ctx.strokeRect(r.x, r.y, r.w, r.h);
+  });
+
+  const width = currentX - startX;
+  const height = currentY - startY;
+  ctx.strokeRect(startX, startY, width, height);
+});
+
+canvas.addEventListener('mouseup', e => {
+  if (!isDrawing) return;
+  isDrawing = false;
+  const endX = e.offsetX;
+  const endY = e.offsetY;
+  const rect = {
+    x: Math.min(startX, endX),
+    y: Math.min(startY, endY),
+    w: Math.abs(endX - startX),
+    h: Math.abs(endY - startY),
+  };
+  rectangles.push(rect);
+  console.log('Rectangles:', rectangles);
+});
+
+// Sauvegarder les annotations côté serveur
+document.getElementById('saveBtn').addEventListener('click', () => {
+  fetch('/save-annotations/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token }}',
+    },
+    body: JSON.stringify({rectangles: rectangles})
+  })
+  .then(resp => resp.json())
+  .then(data => alert('Annotations enregistrées !'))
+  .catch(err => alert('Erreur : ' + err));
+});
+</script>
+{% extends 'base.html' %}

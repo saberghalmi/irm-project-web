@@ -1,0 +1,40 @@
+{% extends 'viewer/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Liste des Patients</h2>
+
+    <form method="get" class="mb-3">
+        <input type="text" name="q" placeholder="Rechercher par nom ou prénom" class="form-control" value="{{ request.GET.q }}">
+    </form>
+
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Date de naissance</th>
+                <th>Dossier</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for patient in patients %}
+            <tr>
+                <td>{{ patient.nom }}</td>
+                <td>{{ patient.prenom }}</td>
+                <td>{{ patient.date_naissance }}</td>
+                <td>
+                    <a href="{% url 'patient_detail' patient.id %}" class="btn btn-info btn-sm">Voir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">Aucun patient trouvé.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+ <input type="text" name="q" placeholder="Rechercher par nom ou prénom" class="form-control" value="{{ query }}">
+
+</div>
+{% endblock %}

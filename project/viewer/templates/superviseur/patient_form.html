@@ -1,0 +1,113 @@
+{% extends 'viewer/base.html' %}
+
+{% block content %}
+<div class="modern-form-container">
+    <!-- Header Section -->
+    <div class="form-header">
+        <div class="header-content">
+            <div class="title-section">
+                <div class="icon-wrapper">
+                    <!-- L'icône change en fonction de l'action -->
+                    {% if patient %}
+                        <i class="fas fa-user-edit"></i>
+                    {% else %}
+                        <i class="fas fa-user-plus"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <!-- Le titre change en fonction de l'action -->
+                    <h1 class="form-title">
+                        {% if patient %}
+                            Modifier le Patient
+                        {% else %}
+                            Nouveau Patient
+                        {% endif %}
+                    </h1>
+                    <p class="form-subtitle">
+                        {% if patient %}
+                            Mettez à jour les informations de {{ patient.prenom }} {{ patient.nom }}
+                        {% else %}
+                            Remplissez les informations du patient
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <a href="{% url 'superviseur_dashboard' %}" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+                <span>Retour</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <form method="post" id="patientForm" class="modern-form">
+            {% csrf_token %}
+            
+            <div class="form-grid">
+                {% for field in form %}
+                    <div class="form-group {% if field.errors %}error{% endif %} 
+                         {% if field.name == 'adresse' %}full-width{% endif %}">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                            {{ field.label }}
+                            {% if field.field.required %}<span class="required">*</span>{% endif %}
+                        </label>
+                        <div class="input-wrapper">
+                            {% if field.name == 'date_naissance' %}<i class="fas fa-calendar input-icon"></i>
+                            {% elif field.name == 'telephone' %}<i class="fas fa-phone input-icon"></i>
+                            {% elif field.name == 'adresse' %}<i class="fas fa-map-marker-alt input-icon"></i>
+                            {% else %}<i class="fas fa-user input-icon"></i>{% endif %}
+                            {{ field }}
+                        </div>
+                        {% if field.errors %}
+                            <div class="error-message">
+                                {% for error in field.errors %}
+                                    <span><i class="fas fa-exclamation-circle"></i> {{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-navigation justify-content-end mt-4">
+                <button type="submit" class="submit-button" id="submitBtn">
+                    {% if patient %}<i class="fas fa-save"></i> Enregistrer les modifications
+                    {% else %}<i class="fas fa-plus-circle"></i> Ajouter le Patient{% endif %}
+                    <div class="button-loader"></div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Le CSS et le JavaScript que vous avez fournis -->
+<style>
+    :root { --glass-bg: transparent !important; } /* Override for form pages */
+    .modern-form-container { max-width: 800px; margin: 40px auto; padding: 24px; }
+    .form-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 32px; color: white; position: relative; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05); }
+    .header-content { display: flex; justify-content: space-between; align-items: center; }
+    .title-section { display: flex; align-items: center; gap: 20px; }
+    .icon-wrapper { background: rgba(255, 255, 255, 0.2); width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .form-title { font-size: 28px; font-weight: 700; margin: 0 0 4px 0; }
+    .form-subtitle { font-size: 16px; opacity: 0.9; margin: 0; }
+    .back-button { background: rgba(255, 255, 255, 0.15); color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; }
+    .back-button:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+    .form-card { background: white; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); margin-top: -30px; z-index: 10; position: relative; }
+    .modern-form { padding: 40px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    .form-label { display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px; }
+    .required { color: #ef4444; }
+    .input-wrapper { position: relative; }
+    .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 12px 12px 48px !important; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px; transition: all 0.3s ease; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2); }
+    .form-group.error input, .form-group.error select, .form-group.error textarea { border-color: #ef4444; }
+    .error-message { margin-top: 6px; color: #ef4444; font-size: 14px; }
+    .submit-button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .submit-button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
+</style>
+
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'viewer/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="gradient-text"><i class="fas fa-pencil-ruler"></i> Annotation de l'image</h2>
+        <a href="{% url 'medecin_dashboard' %}" class="btn btn-glass btn-sm">
+             <i class="fas fa-arrow-left"></i> Retour au dashboard
+        </a>
+    </div>
+
+    <p class="text-white-50">Patient : {{ image.patient_name }} | Date de l'examen : {{ image.exam_date }}</p>
+
+    <div class="card card-body text-center p-2">
+        
+        <!-- CORRECTION : On affiche l'aperçu PNG car le navigateur sait le lire -->
+        {% if image.png_preview %}
+            <!-- On donne un ID à l'image pour que l'outil d'annotation puisse la trouver -->
+            <img id="irm-image-to-annotate" src="{{ image.png_preview.url }}" class="img-fluid" alt="Image IRM à annoter">
+        {% else %}
+            <!-- Sinon, on affiche un message d'erreur clair -->
+            <div class="my-5 text-white-50">
+                <i class="fas fa-exclamation-triangle fa-3x"></i>
+                <h4 class="mt-3">Aperçu non disponible</h4>
+                <p>L'image de prévisualisation pour cette entrée n'a pas pu être chargée.</p>
+            </div>
+        {% endif %}
+
+    </div>
+
+    <div class="card card-body mt-4">
+        <h4 class="gradient-text">Outils d'annotation</h4>
+        <p class="text-white-50">
+            Vous pouvez maintenant cliquer et glisser votre souris sur l'image ci-dessus pour dessiner une annotation.
+        </p>
+    </div>
+</div>
+
+<!-- SCRIPT POUR ACTIVER L'OUTIL D'ANNOTATION SUR L'IMAGE -->
+<script type="text/javascript">
+    (function() {
+        // Cette fonction s'exécute quand la page est prête
+        window.onload = function() {
+            // On vérifie si l'image à annoter existe sur la page
+            if (document.getElementById('irm-image-to-annotate')) {
+                // On initialise la bibliothèque Annotorious sur notre image
+                var anno = Annotorious.init({
+                    image: 'irm-image-to-annotate' 
+                });
+            }
+        }
+    })();
+</script>
+
+{% endblock %}

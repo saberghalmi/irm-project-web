@@ -1,0 +1,59 @@
+{% extends 'viewer/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="gradient-text"><i class="fas fa-users"></i> Dashboard Médecin</h2>
+    </div>
+
+    <!-- Barre de recherche -->
+    <div class="card card-body mb-4">
+        <form method="get" action="{% url 'medecin_dashboard' %}">
+            <p class="text-white-50 mb-2">Rechercher un patient par nom ou prénom :</p>
+            <div class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="Entrez votre recherche..." value="{{ request.GET.q | default:'' }}">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tableau des patients -->
+    <h4 class="gradient-text mb-3">Liste des Patients</h4>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Nom</th>
+                    <th scope="col">Prénom</th>
+                    <th scope="col">Date de Naissance</th>
+                    <th scope="col" class="text-center">Dossier Patient</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %}
+                <tr>
+                    <td>{{ patient.nom }}</td>
+                    <td>{{ patient.prenom }}</td>
+                    <td>{{ patient.date_naissance }}</td>
+                    <td class="text-center">
+                        <!-- ======================= LIGNE MODIFIÉE ======================= -->
+                        <a href="{% url 'patient_detail' patient.id %}" class="btn btn-glass btn-sm">
+                            <i class="fas fa-folder-open"></i> Voir
+                        </a>
+                        <!-- ======================= FIN DE LA MODIFICATION ======================= -->
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-4">
+                        <p class="mb-0 text-white-50">Aucun patient trouvé.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

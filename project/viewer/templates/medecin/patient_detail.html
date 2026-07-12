@@ -1,0 +1,98 @@
+{% extends 'viewer/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="gradient-text"><i class="fas fa-user-injured"></i> Dossier de {{ patient.prenom }} {{ patient.nom }}</h2>
+        
+        <!-- ======================= BOUTONS DE TÊTE DE PAGE MODIFIÉS ======================= -->
+        <div class="d-flex gap-2">
+            <a href="{% url 'download_dossier' patient.id %}" class="btn btn-success btn-sm">
+                <i class="fas fa-file-archive"></i> Télécharger le Dossier ZIP
+            </a>
+            <a href="{% url 'medecin_dashboard' %}" class="btn btn-glass btn-sm">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+        <!-- ======================= FIN DE LA MODIFICATION ======================= -->
+    </div>
+
+    <!-- Section Rapport Médical -->
+    <div class="card card-body mb-4">
+        <h4 class="gradient-text mb-3"><i class="fas fa-file-medical-alt"></i> Rapport Médical</h4>
+        {% if patient.rapport %}
+            <div class="text-white-50" style="white-space: pre-wrap;">{{ patient.rapport.contenu }}</div>
+            <small class="text-muted mt-2">Dernière modification le {{ patient.rapport.derniere_modification|date:"d/m/Y à H:i" }}</small>
+        {% else %}
+            <p class="text-white-50">Aucun rapport n'a encore été rédigé pour ce patient.</p>
+        {% endif %}
+        <hr style="border-color: rgba(255, 255, 255, 0.2);">
+        
+        <!-- ======================= BOUTONS DU RAPPORT MODIFIÉS ======================= -->
+        <div class="d-flex gap-2 mt-2">
+            <a href="{% url 'edit_report' patient.id %}" class="btn btn-primary flex-grow-1">
+                <i class="fas fa-edit"></i> Rédiger/Modifier
+            </a>
+            {% if patient.rapport %}
+            <a href="{% url 'download_report' patient.id %}" class="btn btn-secondary" title="Télécharger le rapport seul">
+                <i class="fas fa-download"></i>
+            </a>
+            {% endif %}
+        </div>
+        <!-- ======================= FIN DE LA MODIFICATION ======================= -->
+    </div>
+
+    <!-- Section Scans 3D -->
+    <div class="card card-body mb-4">
+        <h4 class="gradient-text mb-3"><i class="fas fa-cube"></i> Scans 3D (NIfTI)</h4>
+        {% if scans %}
+            <ul class="list-group list-group-flush">
+                {% for scan in scans %}
+                <li class="list-group-item d-flex justify-content-between align-items-center" style="background: transparent; border-color: rgba(255,255,255,0.2);">
+                    <div class="text-white">
+                        Scan du {{ scan.date_scan|date:"d/m/Y à H:i" }}
+                        <small class="d-block text-white-50">{{ scan.description|default:"Aucune description" }}</small>
+                    </div>
+                    <a href="{% url 'view_scan' scan.id %}" class="btn btn-info btn-sm">
+                        <i class="fas fa-eye"></i> Visualiser les coupes
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-white-50">Aucun scan 3D n'a été uploadé pour ce patient.</p>
+        {% endif %}
+    </div>
+
+    <!-- Section Images 2D (Ancien système) -->
+    <h4 class="gradient-text mb-3"><i class="fas fa-images"></i> Images 2D (Ancien système)</h4>
+    {% if irm_images %}
+        <div class="row">
+            {% for image in irm_images %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        {% if image.png_preview %}
+                            <img src="{{ image.png_preview.url }}" class="card-img-top" alt="Aperçu IRM">
+                        {% else %}
+                            <div class="card-body text-center text-white-50" style="height: 150px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                <i class="fas fa-image fa-2x"></i>
+                                <p class="mt-2 mb-0">Aperçu non disponible</p>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <p class="card-text text-white"><strong>Date :</strong> {{ image.exam_date }}</p>
+                            <p class="card-text text-white"><strong>Type d'AVC :</strong> {{ image.avc_type|default:"N/A" }}</p>
+                            <a href="{% url 'annotate_image' image.id %}" class="btn btn-info btn-sm">
+                                <i class="fas fa-pencil-ruler"></i> Annoter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-white-50">Aucune image 2D disponible pour ce patient.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

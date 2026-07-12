@@ -1,0 +1,642 @@
+{% extends 'viewer/base.html' %}
+
+{% block content %}
+<div class="modern-form-container">
+    <!-- Header Section -->
+    <div class="form-header">
+        <div class="header-content">
+            <div class="title-section">
+                <div class="icon-wrapper">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div>
+                    <h1 class="form-title">Nouveau Patient</h1>
+                    <p class="form-subtitle">Ajoutez les informations du patient</p>
+                </div>
+            </div>
+            <a href="{% url 'superviseur_dashboard' %}" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+                <span>Retour</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+
+        <form method="post" id="patientForm" class="modern-form">
+            {% csrf_token %}
+            
+            <!-- Form Fields Section -->
+            <div class="form-sections">
+                <div class="form-section active" data-section="1">
+                    <h3 class="section-title">
+                        <span class="section-number">01</span>
+                        Informations Personnelles
+                    </h3>
+                    
+                    <div class="form-grid">
+                        {% for field in form %}
+                            {% if forloop.counter <= 4 %}
+                                <div class="form-group {% if field.errors %}error{% endif %} 
+                                     {% if field.field.widget.input_type == 'email' %}full-width{% endif %}">
+                                    <label for="{{ field.id_for_label }}" class="form-label">
+                                        {{ field.label }}
+                                        {% if field.field.required %}
+                                            <span class="required">*</span>
+                                        {% endif %}
+                                    </label>
+                                    <div class="input-wrapper">
+                                        {% if field.name == 'date_naissance' %}
+                                            <i class="fas fa-calendar input-icon"></i>
+                                        {% elif field.name == 'email' %}
+                                            <i class="fas fa-envelope input-icon"></i>
+                                        {% elif field.name == 'telephone' %}
+                                            <i class="fas fa-phone input-icon"></i>
+                                        {% else %}
+                                            <i class="fas fa-user input-icon"></i>
+                                        {% endif %}
+                                        {{ field }}
+                                    </div>
+                                    {% if field.errors %}
+                                        <div class="error-message">
+                                            {% for error in field.errors %}
+                                                <span><i class="fas fa-exclamation-circle"></i> {{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-section" data-section="2">
+                    <h3 class="section-title">
+                        <span class="section-number">02</span>
+                        Informations Médicales
+                    </h3>
+                    
+                    <div class="form-grid">
+                        {% for field in form %}
+                            {% if forloop.counter > 4 %}
+                                <div class="form-group {% if field.errors %}error{% endif %}
+                                     {% if field.field.widget.input_type == 'textarea' %}full-width{% endif %}">
+                                    <label for="{{ field.id_for_label }}" class="form-label">
+                                        {{ field.label }}
+                                        {% if field.field.required %}
+                                            <span class="required">*</span>
+                                        {% endif %}
+                                    </label>
+                                    <div class="input-wrapper">
+                                        {% if 'medical' in field.name or 'symptom' in field.name %}
+                                            <i class="fas fa-stethoscope input-icon"></i>
+                                        {% elif 'address' in field.name or 'adresse' in field.name %}
+                                            <i class="fas fa-map-marker-alt input-icon"></i>
+                                        {% else %}
+                                            <i class="fas fa-file-medical input-icon"></i>
+                                        {% endif %}
+                                        {{ field }}
+                                    </div>
+                                    {% if field.errors %}
+                                        <div class="error-message">
+                                            {% for error in field.errors %}
+                                                <span><i class="fas fa-exclamation-circle"></i> {{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="form-navigation">
+                <button type="button" class="nav-button prev-button" id="prevBtn" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                    Précédent
+                </button>
+                
+                <div class="section-indicators">
+                    <span class="indicator active" data-section="1"></span>
+                    <span class="indicator" data-section="2"></span>
+                </div>
+                
+                <button type="button" class="nav-button next-button" id="nextBtn">
+                    Suivant
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                
+                <button type="submit" class="submit-button" id="submitBtn" style="display: none;">
+                    <i class="fas fa-save"></i>
+                    Enregistrer le Patient
+                    <div class="button-loader"></div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .modern-form-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px;
+        min-height: 100vh;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px 20px 0 0;
+        padding: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(50px, -50px);
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .title-section {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .icon-wrapper {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .form-title {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-subtitle {
+        font-size: 16px;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .back-button {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        text-decoration: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .back-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        color: white;
+        text-decoration: none;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 4px;
+        background: #e5e7eb;
+        position: relative;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        width: 50%;
+        transition: width 0.5s ease;
+    }
+
+    .modern-form {
+        padding: 40px;
+    }
+
+    .form-sections {
+        position: relative;
+        min-height: 500px;
+    }
+
+    .form-section {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        opacity: 0;
+        transform: translateX(50px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+    }
+
+    .form-section.active {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: all;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
+        font-size: 24px;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .section-number {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        align-items: start;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .required {
+        color: #ef4444;
+        margin-left: 4px;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        font-size: 16px;
+        z-index: 2;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 16px 16px 16px 48px !important;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: #fafafa;
+        color: #1f2937;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .form-group textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .error-message {
+        margin-top: 8px;
+        color: #ef4444;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .form-group.error input,
+    .form-group.error select,
+    .form-group.error textarea {
+        border-color: #ef4444;
+        background: #fef2f2;
+        animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    .form-navigation {
+        margin-top: 48px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .nav-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        font-size: 16px;
+    }
+
+    .nav-button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .nav-button:disabled {
+        background: #d1d5db;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .section-indicators {
+        display: flex;
+        gap: 12px;
+    }
+
+    .indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #d1d5db;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .indicator.active {
+        background: #667eea;
+        transform: scale(1.2);
+    }
+
+    .submit-button {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 18px 36px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .submit-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    }
+
+    .button-loader {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .submit-button.loading .button-loader {
+        display: block;
+    }
+
+    .submit-button.loading i {
+        display: none;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .modern-form-container {
+            padding: 16px;
+        }
+
+        .form-header {
+            padding: 24px;
+        }
+
+        .header-content {
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .form-title {
+            font-size: 24px;
+        }
+
+        .modern-form {
+            padding: 24px;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .form-navigation {
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .section-indicators {
+            order: -1;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentSection = 1;
+    const totalSections = 2;
+    
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressFill = document.querySelector('.progress-fill');
+    const form = document.getElementById('patientForm');
+
+    function updateSection() {
+        // Hide all sections
+        document.querySelectorAll('.form-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // Show current section
+        document.querySelector(`[data-section="${currentSection}"]`).classList.add('active');
+        
+        // Update indicators
+        document.querySelectorAll('.indicator').forEach((indicator, index) => {
+            indicator.classList.toggle('active', index + 1 <= currentSection);
+        });
+        
+        // Update progress bar
+        const progress = (currentSection / totalSections) * 100;
+        progressFill.style.width = progress + '%';
+        
+        // Update buttons
+        prevBtn.disabled = currentSection === 1;
+        
+        if (currentSection === totalSections) {
+            nextBtn.style.display = 'none';
+            submitBtn.style.display = 'flex';
+        } else {
+            nextBtn.style.display = 'flex';
+            submitBtn.style.display = 'none';
+        }
+    }
+
+    function validateSection() {
+        const currentSectionElement = document.querySelector(`[data-section="${currentSection}"]`);
+        const requiredFields = currentSectionElement.querySelectorAll('input[required], select[required], textarea[required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.closest('.form-group').classList.add('error');
+                isValid = false;
+            } else {
+                field.closest('.form-group').classList.remove('error');
+            }
+        });
+
+        return isValid;
+    }
+
+    nextBtn.addEventListener('click', function() {
+        if (validateSection()) {
+            if (currentSection < totalSections) {
+                currentSection++;
+                updateSection();
+            }
+        }
+    });
+
+    prevBtn.addEventListener('click', function() {
+        if (currentSection > 1) {
+            currentSection--;
+            updateSection();
+        }
+    });
+
+    // Click indicators to navigate
+    document.querySelectorAll('.indicator').forEach((indicator, index) => {
+        indicator.addEventListener('click', function() {
+            if (index + 1 <= currentSection || validateSection()) {
+                currentSection = index + 1;
+                updateSection();
+            }
+        });
+    });
+
+    // Form submission with loading state
+    form.addEventListener('submit', function() {
+        submitBtn.classList.add('loading');
+        submitBtn.innerHTML = '<span>Enregistrement...</span><div class="button-loader"></div>';
+        submitBtn.disabled = true;
+    });
+
+    // Remove error state on input
+    document.querySelectorAll('input, select, textarea').forEach(field => {
+        field.addEventListener('input', function() {
+            this.closest('.form-group').classList.remove('error');
+        });
+
+        field.addEventListener('focus', function() {
+            this.closest('.form-group').classList.add('focused');
+        });
+
+        field.addEventListener('blur', function() {
+            this.closest('.form-group').classList.remove('focused');
+        });
+    });
+
+    // Initialize
+    updateSection();
+});
+</script>
+{% endblock %}

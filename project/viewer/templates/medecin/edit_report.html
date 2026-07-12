@@ -1,0 +1,18 @@
+{% extends 'viewer/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="gradient-text mb-4"><i class="fas fa-edit"></i> Rapport pour {{ patient.prenom }} {{ patient.nom }}</h2>
+    
+    <div class="card card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <hr>
+            <button type="submit" class="btn btn-primary btn-lg w-100">
+                <i class="fas fa-save"></i> Enregistrer le Rapport
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'viewer/base.html' %}
+
+{% block content %}
+<h2>Gestion des Patients</h2>
+
+<a href="{% url 'add_patient' %}" class="btn btn-primary mb-3">Ajouter un patient</a>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Nom</th>
+      <th>Prénom</th>
+      <th>Date de naissance</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for patient in patients %}
+    <tr>
+      <td>{{ patient.nom }}</td>
+      <td>{{ patient.prenom }}</td>
+      <td>{{ patient.date_naissance }}</td>
+      <td><a href="#">Modifier</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
